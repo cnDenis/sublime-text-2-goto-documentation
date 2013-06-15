@@ -37,6 +37,7 @@ def _make_text_safeish(text, fallback_encoding, method='decode'):
 
 
 class CommandThread(threading.Thread):
+
     def __init__(self, command, on_done, working_dir="", fallback_encoding=""):
         threading.Thread.__init__(self)
         self.command = command
@@ -53,28 +54,32 @@ class CommandThread(threading.Thread):
                 os.chdir(self.working_dir)
 
             proc = subprocess.Popen(self.command,
-                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                shell=shell, universal_newlines=True)
+                                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                    shell=shell, universal_newlines=True)
             output = proc.communicate()[0]
             main_thread(self.on_done,
-                _make_text_safeish(output, self.fallback_encoding))
+                        _make_text_safeish(output, self.fallback_encoding))
         except subprocess.CalledProcessError as e:
             main_thread(self.on_done, e.returncode)
 
 
 class GotoDocumentationCommand(sublime_plugin.TextCommand):
+
     def run(self, edit):
         for region in self.view.sel():
             word = self.view.word(region)
             if not word.empty():
-                # scope: "text.html.basic source.php.embedded.block.html keyword.other.new.php"
+                # scope: "text.html.basic source.php.embedded.block.html
+                # keyword.other.new.php"
                 scope = self.view.scope_name(word.begin()).strip()
                 extracted_scope = scope.rpartition('.')[2]
                 keyword = self.view.substr(word)
-                getattr(self, '%s_doc' % extracted_scope, self.unsupported)(keyword, scope)
+                getattr(self, '%s_doc' %
+                        extracted_scope, self.unsupported)(keyword, scope)
 
     def unsupported(self, keyword, scope):
-        sublime.status_message("This scope is not supported: %s" % scope.rpartition('.')[2])
+        sublime.status_message(
+            "This scope is not supported: %s" % scope.rpartition('.')[2])
 
     def php_doc(self, keyword, scope):
         open_url("http://php.net/%s" % keyword)
@@ -113,10 +118,15 @@ class GotoDocumentationCommand(sublime_plugin.TextCommand):
         open_url('http://www.smarty.net/%s' % keyword)
 
     def cmake_doc(self, keyword, scope):
-        open_url('http://cmake.org/cmake/help/v2.8.8/cmake.html#command:%s' % keyword.lower())
+        open_url('http://cmake.org/cmake/help/v2.8.8/cmake.html#command:%s' %
+                 keyword.lower())
 
     def perl_doc(self, keyword, scope):
         open_url("http://perldoc.perl.org/search.html?q=%s" % keyword)
+
+    def erlang_doc(self, keyword, scope):
+        open_url("http://erldocs.com/R15B/erts/erlang.html?i=0&search=%s" %
+                 keyword)
 
     def run_command(self, command, callback=None, **kwargs):
         if not callback:
@@ -127,18 +137,21 @@ class GotoDocumentationCommand(sublime_plugin.TextCommand):
     def panel(self, output, **kwargs):
         active_window = sublime.active_window()
         if not hasattr(self, 'output_view'):
-            self.output_view = active_window.get_output_panel("gotodocumentation")
+            self.output_view = active_window.get_output_panel(
+                "gotodocumentation")
         self.output_view.set_read_only(False)
         self.output_view.run_command('goto_documentation_output', {
             'output': output,
             'clear': True
         })
         self.output_view.set_read_only(True)
-        active_window.run_command("show_panel", {"panel": "output.gotodocumentation"})
+        active_window.run_command("show_panel", {
+                                  "panel": "output.gotodocumentation"})
 
 
 class GotoDocumentationOutputCommand(sublime_plugin.TextCommand):
-    def run(self, edit, output = '', output_file = None, clear = False):
+
+    def run(self, edit, output='', output_file=None, clear=False):
         if clear:
             region = sublime.Region(0, self.view.size())
             self.view.erase(edit, region)
