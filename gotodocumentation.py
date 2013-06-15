@@ -125,8 +125,7 @@ class GotoDocumentationCommand(sublime_plugin.TextCommand):
         open_url("http://perldoc.perl.org/search.html?q=%s" % keyword)
 
     def erlang_doc(self, keyword, scope):
-        open_url("http://erldocs.com/R15B/erts/erlang.html?i=0&search=%s" %
-                 keyword)
+        open_url("http://www.erlang.org/erldoc?q=%s" % keyword)
 
     def run_command(self, command, callback=None, **kwargs):
         if not callback:
